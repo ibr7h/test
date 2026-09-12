@@ -1,8 +1,9 @@
-const CACHE_NAME = 'rainbow-kids-v3-2026-09-12';
+const CACHE_NAME = 'rainbow-kids-v3.1-2026-09-12';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './safe-mic.js',
   './icons/apple-touch-icon.png',
   './icons/icon-192.png',
   './icons/icon-512.png'
