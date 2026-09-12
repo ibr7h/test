@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "Rainbow Kids • Learn, Play & Create",
+  "short_name": "Rainbow Kids",
+  "description": "A child-friendly iPhone learning app for colors, chants, flashcards, voice recall, games and creative coloring.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#EAF8FF",
+  "theme_color": "#38BDF8",
+  "lang": "en",
+  "categories": ["education", "kids"],
+  "icons": [
+    {"src":"./icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"./icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
