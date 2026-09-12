@@ -1,6 +1,8 @@
 name: Deploy Rainbow PWA to GitHub Pages
 
 on:
+  push:
+    branches: ["master"]
   workflow_dispatch:
 
 permissions:
@@ -8,8 +10,84 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
-  prepare:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Deployment temporarily paused while upload parts are prepared."
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build static PWA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/icons
+          cat site/indexb64/part-* | base64 -d | gunzip > public/index.html
+          cp site/manifest.webmanifest public/manifest.webmanifest
+          cp site/sw.js public/sw.js
+          python3 - <<'PY'
+          import struct, zlib, binascii, math
+          from pathlib import Path
+
+          def chunk(kind, data):
+              return struct.pack('>I', len(data)) + kind + data + struct.pack('>I', binascii.crc32(kind + data) & 0xffffffff)
+
+          def make_icon(size, path):
+              bg = (56, 189, 248)
+              rainbow = [(239,68,68),(249,115,22),(234,179,8),(34,197,94),(59,130,246),(139,92,246)]
+              cx, cy = size / 2, size * 0.67
+              outer, inner = size * 0.39, size * 0.17
+              band = (outer - inner) / len(rainbow)
+              clouds = [
+                  (cx-outer*0.92, cy, size*.095), (cx-outer*.74, cy-size*.035, size*.075), (cx-outer*1.08, cy+size*.012, size*.065),
+                  (cx+outer*0.92, cy, size*.095), (cx+outer*.74, cy-size*.035, size*.075), (cx+outer*1.08, cy+size*.012, size*.065),
+              ]
+              rows=[]
+              for y in range(size):
+                  row=bytearray([0])
+                  for x in range(size):
+                      c=bg
+                      dx, dy=x-cx, y-cy
+                      r=math.hypot(dx,dy)
+                      if y <= cy and inner <= r < outer:
+                          idx=min(len(rainbow)-1, int((outer-r)/band))
+                          c=rainbow[idx]
+                      if any((x-qx)**2 + (y-qy)**2 <= qr**2 for qx,qy,qr in clouds):
+                          c=(255,255,255)
+                      row.extend(c)
+                  rows.append(bytes(row))
+              raw=b''.join(rows)
+              png=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',size,size,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(raw,9))+chunk(b'IEND',b'')
+              Path(path).write_bytes(png)
+
+          make_icon(180, 'public/icons/apple-touch-icon.png')
+          make_icon(192, 'public/icons/icon-192.png')
+          make_icon(512, 'public/icons/icon-512.png')
+          PY
+          test -s public/index.html
+          grep -q '<!DOCTYPE html>' public/index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
