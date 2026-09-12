@@ -1,8 +1,6 @@
 name: Deploy Rainbow PWA to GitHub Pages
 
 on:
-  push:
-    branches: ["master"]
   workflow_dispatch:
 
 permissions:
@@ -10,46 +8,8 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
-  build:
+  prepare:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build static PWA
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p public/icons
-          base64 -d site/index.html.gz.b64 | gunzip > public/index.html
-          cp site/manifest.webmanifest public/manifest.webmanifest
-          cp site/sw.js public/sw.js
-          base64 -d site/icon-192.png.b64 > public/icons/icon-192.png
-          base64 -d site/icon-512.png.b64 > public/icons/icon-512.png
-          base64 -d site/apple-touch-icon.png.b64 > public/icons/apple-touch-icon.png
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./public
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - run: echo "Deployment temporarily paused while upload parts are prepared."
