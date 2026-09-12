@@ -1,0 +1,2 @@
+Trigger GitHub Pages deployment for Rainbow Colors PWA.
+Commit generated after the Pages workflow was added.
