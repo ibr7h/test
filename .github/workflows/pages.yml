@@ -68,8 +68,18 @@ jobs:
           make_icon(192, 'public/icons/icon-192.png')
           make_icon(512, 'public/icons/icon-512.png')
           PY
+
+          # Build the separate iPhone-first Rainbow Kids prototype without replacing the live root app.
+          mkdir -p public/prototype
+          cat site/prototypeb64/part-* | base64 -d | gunzip > public/prototype/index.html
+          cp site/prototype/manifest.webmanifest public/prototype/manifest.webmanifest
+          cp site/prototype/sw.js public/prototype/sw.js
+          cp -R public/icons public/prototype/icons
+
           test -s public/index.html
           grep -q '<!DOCTYPE html>' public/index.html
+          test -s public/prototype/index.html
+          grep -q 'Rainbow Kids' public/prototype/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
