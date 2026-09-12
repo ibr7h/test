@@ -74,12 +74,26 @@ jobs:
           cat site/prototypeb64/part-* | base64 -d | gunzip > public/prototype/index.html
           cp site/prototype/manifest.webmanifest public/prototype/manifest.webmanifest
           cp site/prototype/sw.js public/prototype/sw.js
+          cp site/prototype/safe-mic.js public/prototype/safe-mic.js
           cp -R public/icons public/prototype/icons
+
+          # Inject the microphone-safe patch after the main application script.
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('public/prototype/index.html')
+          s = p.read_text()
+          tag = '<script src="./safe-mic.js"></script>'
+          if tag not in s:
+              s = s.replace('</body>', f'  {tag}\n</body>', 1)
+          p.write_text(s)
+          PY
 
           test -s public/index.html
           grep -q '<!DOCTYPE html>' public/index.html
           test -s public/prototype/index.html
           grep -q 'Rainbow Kids' public/prototype/index.html
+          grep -q 'safe-mic.js' public/prototype/index.html
+          test -s public/prototype/safe-mic.js
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
