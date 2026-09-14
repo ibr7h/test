@@ -88,12 +88,44 @@ jobs:
           p.write_text(s)
           PY
 
+          # Inject persistent copyright and commercial-rights notice into both published Rainbow apps.
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          meta = '<meta name="copyright" content="Copyright © 2026 Ibrahim Alneami — All Rights Reserved">'
+          style = '''<style id="ibrahim-copyright-style">
+          #ibrahim-copyright-notice{box-sizing:border-box;width:100%;padding:8px 12px calc(8px + env(safe-area-inset-bottom));text-align:center;font:600 10px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#475569;background:rgba(255,255,255,.9);border-top:1px solid rgba(148,163,184,.25)}
+          #ibrahim-copyright-notice small{display:block;font-weight:500;opacity:.82}
+          </style>'''
+          notice = '''<footer id="ibrahim-copyright-notice" aria-label="Copyright and commercial licensing notice">
+          <div>Copyright © 2026 Ibrahim Alneami — All Rights Reserved</div>
+          <small>Commercial use, resale, redistribution, white-labeling, or sublicensing requires a separate written paid license.</small>
+          </footer>'''
+
+          for filename in ('public/index.html', 'public/prototype/index.html'):
+              p = Path(filename)
+              s = p.read_text()
+              if 'name="copyright"' not in s:
+                  s = re.sub(r'</head>', meta + '\n' + style + '\n</head>', s, count=1, flags=re.I)
+              elif 'ibrahim-copyright-style' not in s:
+                  s = re.sub(r'</head>', style + '\n</head>', s, count=1, flags=re.I)
+              if 'id="ibrahim-copyright-notice"' not in s:
+                  s = re.sub(r'</body>', notice + '\n</body>', s, count=1, flags=re.I)
+              p.write_text(s)
+          PY
+
+          cp LICENSE public/LICENSE.txt
+
           test -s public/index.html
-          grep -q '<!DOCTYPE html>' public/index.html
+          grep -qi '<!doctype html>' public/index.html
+          grep -q 'Copyright © 2026 Ibrahim Alneami' public/index.html
           test -s public/prototype/index.html
           grep -q 'Rainbow Kids' public/prototype/index.html
           grep -q 'safe-mic.js' public/prototype/index.html
+          grep -q 'Copyright © 2026 Ibrahim Alneami' public/prototype/index.html
           test -s public/prototype/safe-mic.js
+          test -s public/LICENSE.txt
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
